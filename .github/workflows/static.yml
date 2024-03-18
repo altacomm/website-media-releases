@@ -31,6 +31,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Combine Markdown files
+        run: |
+          python -m pip install --upgrade pip
+          pip install markdown
+          python combine.py
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
