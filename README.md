@@ -23,6 +23,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis lacus ut ri
 * Bullet point 1
 * Bullet point 2
 
+<!-- the python markdown parser inexplicably merges lists and wraps some bullet points in <p> when there are consecutive but clearly distinct lists in the absence of this comment (or other non-list elements), better solution to be researched -->
+
 1. List item 1
 2. List item 2
 ```
