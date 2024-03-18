@@ -2,15 +2,17 @@ import os
 import re
 import markdown
 
+dir = './articles'
+
 # get markdown files in the current directory which start with a date
-files = [f for f in os.listdir('.') if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
+files = [f for f in os.listdir(dir) if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
 #sort in reverse order
 files.sort(reverse=True)
 
 # combine all files into a single string
 combined = ''
 for file in files:
-    with open(file, 'r') as f:
+    with open(f'{dir}/{file}', 'r') as f:
         combined += f.read()
         # add a horizontal rule between files
         if file != files[-1]:
