@@ -1,31 +1,39 @@
 import os
 import re
 import markdown
+from bs4 import BeautifulSoup
 
-dir = './articles'
+src_dir = './articles'
+build_dir = './build'
 
 # get markdown files in the current directory which start with a date
-files = [f for f in os.listdir(dir) if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
-#sort in reverse order
+files = [f for f in os.listdir(src_dir) if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
 files.sort(reverse=True)
 
-# combine all files into a single string
-combined = ''
-for file in files:
-    with open(f'{dir}/{file}', 'r') as f:
-        combined += f.read()
-        # add a horizontal rule between files
-        if file != files[-1]:
-            combined += '\n\n---\n\n'
+# extract the titles and descriptions
+titles = []
+descriptions = []
 
-# parse into html
-html = markdown.markdown(combined)
+for f in files:
+    with open(os.path.join(src_dir, f), 'r') as file:
+        html = markdown.markdown(file.read())
+        soup = BeautifulSoup(html, 'html.parser')
+        titles.append(soup.h1.text)
+        descriptions.append(soup.h2.text)
 
-# write to file
-with open('media-releases.html', 'w') as f:
-    f.write(html)
+# create the list of articles
+result = ''
+for i in range(len(titles)):
+    result += f'<h2><a href=\"media-releases/article?article={files[i][:-3]}\">{titles[i]}</a></h2>\n'
+    result += f'<h3>{descriptions[i]}</h3>\n'
+    result += '<hr>\n' if i < len(titles) - 1 else ''
 
-print('Combined html:')
-print(html)
-print(f'Files combined: {files}')
-print(f'{len(files)} files combined into media-releases.html')
+with open(os.path.join(build_dir, 'media-releases.html'), 'w') as file:
+    file.write(result)
+
+# create the separate articles
+for f in files:
+    with open(os.path.join(src_dir, f), 'r') as file:
+        html = markdown.markdown(file.read())
+        with open(os.path.join(build_dir, f[:-3] + '.html'), 'w') as file:
+            file.write(html)
