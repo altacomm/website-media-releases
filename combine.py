@@ -3,40 +3,56 @@ import re
 import markdown
 from bs4 import BeautifulSoup
 
-src_dir = './articles'
-build_dir = './build'
+SRC_DIR = './articles'
+BUILD_DIR = './build'
 
-# get markdown files in the current directory which start with a date
-files = [f for f in os.listdir(src_dir) if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
-files.sort(reverse=True)
+class Article:
+    def __init__(self, file_name):
+        self.file_name = file_name
+        with open(os.path.join(SRC_DIR, file_name), 'r') as file:
+            self.markdown = file.read()
+            self.html = markdown.markdown(self.markdown)
+            soup = BeautifulSoup(self.html, 'html.parser')
+            self.title = soup.h1.text
+            self.description = soup.h2.text
 
-# extract the titles and descriptions
-titles = []
-descriptions = []
+    def __str__(self):
+        return f'{self.title} {self.date} {self.description}'
 
-for f in files:
-    with open(os.path.join(src_dir, f), 'r') as file:
-        html = markdown.markdown(file.read())
-        soup = BeautifulSoup(html, 'html.parser')
-        titles.append(soup.h1.text)
-        descriptions.append(soup.h2.text)
+    def __repr__(self):
+        return self.__str__()
 
-# create the list of articles
-result = ''
-for i in range(len(titles)):
-    result += f'<h2><a href=\"media-releases/article?article={files[i][:-3]}\">{titles[i]}</a></h2>\n'
-    result += f'<p class="date">{files[i][:4]}-{files[i][4:6]}-{files[i][6:8]}</p>\n'
-    result += f'<p class="description">{descriptions[i]}</p>\n'
-    result += '<hr>\n' if i < len(titles) - 1 else ''
+    def date(self):
+        return self.file_name[:8]
+    
+    def pretty_date(self):
+        return f'{self.file_name[:4]}-{self.file_name[4:6]}-{self.file_name[6:8]}'
 
-with open(os.path.join(build_dir, 'media-releases.html'), 'w') as file:
-    file.write(result)
+def get_articles():
+    files = [f for f in os.listdir(SRC_DIR) if f.endswith('.md') and re.match(r'\d{8}', f[:8])]
+    files.sort(reverse=True)
+    return [Article(f) for f in files]
 
-# create the separate articles
-for f in files:
-    with open(os.path.join(src_dir, f), 'r') as file:
-        html = markdown.markdown(file.read())
-        date = f'<p class="date">{f[:4]}-{f[4:6]}-{f[6:8]}</p>'
-        html = html.replace('</h1>', f'</h1>\n{date}')
-        with open(os.path.join(build_dir, f[:-3] + '.html'), 'w') as file:
+def create_media_releases(articles):
+    result = ''
+    for article in articles:
+        result += f'<h2><a href=\"media-releases/article?article={article.file_name[:-3]}\">{article.title}</a></h2>\n'
+        result += f'<p class="date">{article.pretty_date()}</p>\n'
+        result += f'<p class="description">{article.description}</p>\n'
+        result += '<hr>\n' if article != articles[-1] else ''
+    with open(os.path.join(BUILD_DIR, 'media-releases.html'), 'w') as file:
+        file.write(result)
+
+def create_articles(articles):
+    for article in articles:
+        html = article.html.replace('</h1>', f'</h1>\n<p class="date">{article.pretty_date()}</p>')
+        with open(os.path.join(BUILD_DIR, article.file_name[:-3] + '.html'), 'w') as file:
             file.write(html)
+
+def main():
+    articles = get_articles()
+    create_media_releases(articles)
+    create_articles(articles)
+
+if __name__ == '__main__':
+    main()
