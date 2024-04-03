@@ -39,7 +39,7 @@ def get_articles():
 def create_media_releases(articles):
     result = ''
     for article in articles:
-        result += f'<h2><a href=\"media-releases/article?article={article.file_name[:-3]}\">{article.title}</a></h2>\n'
+        result += f'<h2><a href=\"news/article?article={article.file_name[:-3]}\">{article.title}</a></h2>\n'
         result += f'{article.pretty_date()}\n'
         result += f'<p class="description">{article.description}</p>\n'
         result += '<hr>\n' if article != articles[-1] else ''
